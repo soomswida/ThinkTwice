@@ -10,21 +10,30 @@ import numpy.linalg as LA
 def acceptedDist(p_dist, q_dist):
     accepted = np.zeros(len(p_dist))
 
-    # min(p(x), q(x))
+    # min(p(x), q(x)) only if it is accepted
     for x in range(len(p_dist)):
-        accepted[x] = min(p_dist[x], q_dist[x])
+        bar = min(1, p_dist[x] / q_dist[x])
+
+        if bar == 1:
+            accepted[x] = min(p_dist[x], q_dist[x])
 
     return accepted
 
 def residualDist(p_dist, q_dist):
     residual = np.zeros(len(p_dist))
+    norm = np.zeros(len(p_dist))
 
     # max(0, p(x)- q(x))
     for x in range(len(p_dist)):
-        residual[x] = p_dist[x] - q_dist[x]
-        residual[x] = max(0, residual[x])
+        bar = min(1, p_dist[i] / q_dist[x])
+
+        if bar != 1:
+            residual[x] = p_dist[x] - q_dist[x]
+            residual[x] = max(0, residual[x])
     
-    # norm(...)
+            norm = p_dist[x] / q_dist[x]
+            residual[x] = norm * residual[x]
+
     norm = LA.norm(residual)
     residual = residual / norm    
 
