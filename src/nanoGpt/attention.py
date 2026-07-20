@@ -12,7 +12,7 @@ learning_rate = 3e-4 # for optimizer(Adam)
 device = 'mps' if torch.backends.mps.is_available() else 'cpu'
 eval_iters = 200
 n_embd = 384 # The number of embedding dimensions
-n_head = 6
+n_head = 6 # 386 // 6 = 64 dim for each heads
 n_layer = 6
 dropout = 0.2
 # ----------------
