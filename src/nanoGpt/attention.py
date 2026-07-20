@@ -114,6 +114,25 @@ class FeedForward(nn.Module):
     def forward(self, x):
         return self.net(x)
     
+class LayerNorm1d: # (used to be BatchNorm1d)
+
+  def __init__(self, dim, eps=1e-5, momentum=0.1):
+    self.eps = eps
+    self.gamma = torch.ones(dim)
+    self.beta = torch.zeros(dim)
+
+  def __call__(self, x):
+    # calculate the forward pass
+    # 0 : row and column, 1 : rows only
+    xmean = x.mean(1, keepdim=True) # batch mean
+    xvar = x.var(1, keepdim=True) # batch variance
+    xhat = (x - xmean) / torch.sqrt(xvar + self.eps) # normalize to unit variance
+    self.out = self.gamma * xhat + self.beta
+    return self.out
+
+  def parameters(self):
+    return [self.gamma, self.beta]
+
 class Block(nn.Module):
     """Transformer block: communication followed by computation"""
 
@@ -122,11 +141,13 @@ class Block(nn.Module):
         head_size = n_embd // n_head
         self.sa = MultiHeadAttention(n_head, head_size)
         self.ffwd = FeedForward(n_embd)
+        self.ln1 = LayerNorm1d(n_embd)
+        self.ln2 = LayerNorm1d(n_embd)
 
     def forward(self, x):
         # Let's add residual connections!
-        x = x + self.sa(x)
-        x = x + self.ffwd(x)
+        x = x + self.sa(self.ln1(x))
+        x = x + self.ffwd(self.ln2(x))
         return x
 
 class BigramLanguageModel(nn.Module):
