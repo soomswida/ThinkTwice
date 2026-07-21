@@ -4,14 +4,22 @@ import torch.nn as nn
 from torch.nn import functional as F
 
 # Hyperparameters
-batch_size = 64 # how many independent sequences will we process in parallel?
-block_size = 256 # what is the maximum context lenght for predictions?
+batch_size = 16 # how many independent sequences will we process in parallel?
+block_size = 64 # what is the maximum context lenght for predictions?
 max_iters = 5000
 eval_interval = 500
 learning_rate = 3e-4 # for optimizer(Adam)
-device = 'mps' if torch.backends.mps.is_available() else 'cpu'
+
+# Versatile device configuration
+if torch.cuda.is_available():
+    device = 'cuda'
+elif torch.backends.mps.is_available():
+    device = 'mps'
+else:
+    device = 'cpu'
+# device = 'mps' if torch.backends.mps.is_available() else 'cpu'
 eval_iters = 200
-n_embd = 384 # The number of embedding dimensions
+n_embd = 192 # The number of embedding dimensions
 n_head = 6 # 386 // 6 = 64 dim for each heads
 n_layer = 6
 dropout = 0.2
