@@ -2,11 +2,13 @@
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
+import os
+from pathlib import Path
 
 # Hyperparameters
 batch_size = 16 # how many independent sequences will we process in parallel?
 block_size = 64 # what is the maximum context lenght for predictions?
-max_iters = 5000
+max_iters = 1000
 eval_interval = 500
 learning_rate = 3e-4 # for optimizer(Adam)
 
@@ -206,6 +208,17 @@ class BigramLanguageModel(nn.Module):
         return idx
     
 model = BigramLanguageModel()
+
+# Path for the saved model
+PATH = './checkpoints/model.pt'
+file_path = Path(PATH)
+
+if not file_path.is_file(): 
+    os.makedirs('./checkpoints', exist_ok=True)
+else:
+    model.load_state_dict(torch.load(PATH, weights_only=True))
+    model.eval()
+
 m = model.to(device)
 
 # Create a PyTorch optimizer (Adam)
@@ -225,6 +238,8 @@ for iter in range(max_iters):
     optimizer.zero_grad(set_to_none=True)
     loss.backward()
     optimizer.step()
+
+torch.save(m.state_dict(), PATH)
 
 # Generate from the model
 context = torch.zeros((1,1), dtype=torch.long, device=device)
