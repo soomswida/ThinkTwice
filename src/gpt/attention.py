@@ -1,14 +1,30 @@
 # This is a independent python script for the self-attention model forked from `bigram.py`.
+# Not like "Attention Is All You Need", it lacks "encoder" part of transformer in it. It remains as an assignment for you!
+
+"""
+Here's a TODO list for you:
+
+0. Review the code of nanoGPT by Andrej Kapathy
+    - to learn the code writing / project structure convention in ML
+1. Implement Encoder Module in it.
+2. Implement Tokenizer along with AK's video and mount it onto this. 
+"""
+
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
 import os
 from pathlib import Path
 
-# Hyperparameters
-batch_size = 16 # how many independent sequences will we process in parallel?
+# Additionally imported
+import math
+import inspect
+from dataclasses import dataclass
+
+# Hyperparameters - Usually located in a separated file, but for now just use this. 
+batch_size = 32 # how many independent sequences will we process in parallel?
 block_size = 64 # what is the maximum context lenght for predictions?
-max_iters = 1000
+max_iters = 2000
 eval_interval = 500
 learning_rate = 3e-4 # for optimizer(Adam)
 
@@ -84,7 +100,6 @@ class Head(nn.Module):
         self.query = nn.Linear(n_embd, head_size, bias=False)
         self.value = nn.Linear(n_embd, head_size, bias=False)
         self.register_buffer('tril', torch.tril(torch.ones(block_size, block_size))) # masking
-
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, x):
@@ -176,6 +191,7 @@ class BigramLanguageModel(nn.Module):
         # x = self.sa_head(x)
         # x = self.sa_heads(x)
         # x = self.ffwd(x)
+        x = self.blocks(x)
         x = self.blocks(x)
         x = self.ln_f(x)
         logits = self.lm_head(x) # (B,T,C)
