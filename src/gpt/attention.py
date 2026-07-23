@@ -20,6 +20,8 @@ from pathlib import Path
 import math
 import inspect
 from dataclasses import dataclass
+import tiktoken
+import sys
 
 # Hyperparameters - Usually located in a separated file, but for now just use this. 
 batch_size = 32 # how many independent sequences will we process in parallel?
@@ -59,8 +61,18 @@ itos = { i:ch for i,ch in enumerate(chars) }
 encode = lambda s: [stoi[c] for c in s] # String -> token(int)
 decode = lambda l: ''.join([itos[i] for i in l]) # tokens(ints) -> String
 
+## tiktoken encoder
+enc = tiktoken.get_encoding("o200k_base")
+
+if sys.argv[0] == "":
+    data = torch.tensor(encode(text))
+else:
+    tokens = enc.encode(text)
+    vocab_size = len(tokens)
+    data = torch.tensor(tokens)
+
 # Train and test splits
-data = torch.tensor(encode(text))
+# data = torch.tensor(encode(text))
 n = int(0.9*len(data)) # the anchor spliting the train and the val set
 train_data = data[:n]
 val_data = data[n:]
@@ -226,7 +238,10 @@ class BigramLanguageModel(nn.Module):
 model = BigramLanguageModel()
 
 # Path for the saved model
-PATH = './checkpoints/model.pt'
+if sys.argv[0] == "":
+    PATH = './checkpoints/model.pt'
+else:
+    PATH = './checkpoints/tik.pt'
 file_path = Path(PATH)
 
 if not file_path.is_file(): 
@@ -259,4 +274,11 @@ torch.save(m.state_dict(), PATH)
 
 # Generate from the model
 context = torch.zeros((1,1), dtype=torch.long, device=device)
-print(decode(m.generate(context, max_new_tokens=500)[0].tolist()))
+# print(decode(m.generate(context, max_new_tokens=500)[0].tolist()))
+# print(enc.decode(m.generate(context, max_new_tokens=500)[0].tolist()))
+
+if sys.argv[0] == "":
+    print(decode(m.generate(context, max_new_tokens=500)[0].tolist()))
+else:
+    print(enc.decode(m.generate(context, max_new_tokens=500)[0].tolist()))
+    
